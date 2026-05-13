@@ -1,43 +1,109 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Routes, Route, Link } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+
+import RegisterPage from "./pages/ReisterPage";
+import LoginPage from "./pages/LoginPage";
+import { useDispatch, useSelector } from "react-redux";
+import ProtectedRoutes from "./routes/ProtectedRoutes";
+import { logout, setCredentials } from "./features/auth/authSlice";
 import { useEffect, useState } from "react";
 import { getHealthStatus } from "./services/healthService";
+import { getCurrentUser } from "./features/auth/serApi";
+import type { CurrentUser } from "./constants/types";
+import { handleApiError } from "./utils/common";
+import type { RootState } from "./store/store";
 
-const App = () => {
-  const [count, setCount] = useState<number>(0);
+function HomePage() {
   const [health, setHealth] = useState<string>("");
-
-  const handleCountInsrease = () => {
-    return setCount((prev) => prev + 1);
-  };
 
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        console.log("get Data");
         const response = await getHealthStatus();
         setHealth(response?.message);
         console.log("Date from health", response);
       } catch (err) {
-        console.error("Health API Error", err);
+        handleApiError({
+          err,
+          action: "Health",
+        });
       }
     };
     fetchHealth();
   }, []);
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black">
-      {health && (
-        <h1 className="text-6xl font-bold text-emerald-500">{health}</h1>
-      )}
-      <h3 className="text-5xl font-bold text-cyan-400">Count: {count}</h3>
-      <div>
-        <button
-          className="font-bold text-black-300 w-18 h-6 m-4 bg-amber-300"
-          onClick={handleCountInsrease}
-        >
-          Inc
-        </button>
-      </div>
+    <div className="p-10">
+      <h1 className="text-3xl font-bold">{health}</h1>
     </div>
   );
-};
+}
+
+function App() {
+  const dispatch = useDispatch();
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await getCurrentUser();
+        const token = localStorage.getItem("token");
+        dispatch(
+          setCredentials({
+            user: response?.user,
+            token,
+          }),
+        );
+        setCurrentUser(response);
+      } catch (err) {
+        handleApiError({
+          err,
+          action: "Current User",
+        });
+      }
+    };
+    if (localStorage.getItem("token")) {
+      fetchCurrentUser();
+    }
+  }, []);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+  return (
+    <>
+      <Toaster position="top-right" />
+      {isAuthenticated && (
+        <nav className="flex gap-4 p-4 bg-gray-200">
+          <span>
+            Welcome {<b className="capitalize">{currentUser?.name}</b>}
+          </span>
+          <Link to="/">Home</Link>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-1 rounded"
+          >
+            Logout
+          </button>
+        </nav>
+      )}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoutes>
+              <HomePage />
+            </ProtectedRoutes>
+          }
+        />
+
+        <Route path="/register" element={<RegisterPage />} />
+
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </>
+  );
+}
 
 export default App;
