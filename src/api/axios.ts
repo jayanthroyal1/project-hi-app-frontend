@@ -7,6 +7,20 @@ const axiosInstance = axios.create({
   },
 });
 
+// interceptors modify request globally - auth tokens, logging, refresh token, analytics, error handling
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
 type ApiRequestProps = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   url: string;

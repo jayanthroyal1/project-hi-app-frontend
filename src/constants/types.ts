@@ -8,3 +8,13 @@ export interface LoginPayload {
   name: string;
   password: string;
 }
+
+export interface CurrentUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}

@@ -28,3 +28,16 @@ Redux Store updated
 useSelector reads updated state
    ↓
 UI re-renders
+
+# Secure Authentication
+Login
+   ↓
+JWT Token Issued
+   ↓
+Frontend Stores Token
+   ↓
+Axios Sends Token
+   ↓
+Backend Middleware Verifies Token
+   ↓
+Protected APIs Unlock
