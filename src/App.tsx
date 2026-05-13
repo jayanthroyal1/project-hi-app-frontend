@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Routes, Route, Link } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 import { getHealthStatus } from "./services/healthService";
 import { getCurrentUser } from "./features/auth/serApi";
 import type { CurrentUser } from "./constants/types";
+import { handleApiError } from "./utils/common";
+import type { RootState } from "./store/store";
 
 function HomePage() {
   const [health, setHealth] = useState<string>("");
@@ -18,12 +20,14 @@ function HomePage() {
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        console.log("get Data");
         const response = await getHealthStatus();
         setHealth(response?.message);
         console.log("Date from health", response);
       } catch (err) {
-        console.error("Health API Error", err);
+        handleApiError({
+          err,
+          action: "Health",
+        });
       }
     };
     fetchHealth();
@@ -38,7 +42,6 @@ function HomePage() {
 function App() {
   const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -50,23 +53,24 @@ function App() {
             token,
           }),
         );
-        console.log("Response", response);
         setCurrentUser(response);
       } catch (err) {
-        console.error(err);
+        handleApiError({
+          err,
+          action: "Current User",
+        });
       }
     };
     if (localStorage.getItem("token")) {
       fetchCurrentUser();
     }
-  }, [dispatch]);
+  }, []);
   const isAuthenticated = useSelector(
-    (state: any) => state.auth.isAuthenticated,
+    (state: RootState) => state.auth.isAuthenticated,
   );
   const handleLogout = () => {
     dispatch(logout());
   };
-  console.log("Check typeof", typeof currentUser);
   return (
     <>
       <Toaster position="top-right" />

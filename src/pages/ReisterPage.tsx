@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { registerUser } from "../features/auth/authAPI";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import { handleApiError } from "../utils/common";
 
 function RegisterPage() {
   const { register, handleSubmit, reset } = useForm();
@@ -13,8 +14,7 @@ function RegisterPage() {
       toast.success(response?.message);
       reset();
     } catch (err) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Registation Failed");
+      handleApiError({ err, action: "Register" });
     }
   };
 

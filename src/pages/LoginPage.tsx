@@ -1,17 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../features/auth/authAPI";
 import toast from "react-hot-toast";
 import { setCredentials } from "../features/auth/authSlice";
+import { handleApiError } from "../utils/common";
+import type { LoginPayload } from "../constants/types";
 
 function LoginPage() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<LoginPayload>();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: LoginPayload) => {
     try {
       const response = await loginUser(data);
       dispatch(
@@ -23,8 +24,7 @@ function LoginPage() {
       toast.success(response?.message);
       navigate("/");
     } catch (err) {
-      console.log("Unable to login", err);
-      toast.error(err?.response?.data?.message || "Login Failed");
+      handleApiError({ err, action: "Login" });
     }
   };
   return (

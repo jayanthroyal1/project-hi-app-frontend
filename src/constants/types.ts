@@ -5,7 +5,7 @@ export interface RegisterPayload {
 }
 
 export interface LoginPayload {
-  name: string;
+  email: string;
   password: string;
 }
 
