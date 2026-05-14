@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Routes, Route, Link } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 import RegisterPage from "./pages/ReisterPage";
 import LoginPage from "./pages/LoginPage";
@@ -13,6 +13,7 @@ import { getCurrentUser } from "./features/auth/serApi";
 import type { CurrentUser } from "./constants/types";
 import { handleApiError } from "./utils/common";
 import type { RootState } from "./store/store";
+import TodoPage from "./pages/TodoPage";
 
 function HomePage() {
   const [health, setHealth] = useState<string>("");
@@ -22,7 +23,6 @@ function HomePage() {
       try {
         const response = await getHealthStatus();
         setHealth(response?.message);
-        console.log("Date from health", response);
       } catch (err) {
         handleApiError({
           err,
@@ -42,11 +42,14 @@ function HomePage() {
 function App() {
   const dispatch = useDispatch();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const { token, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth,
+  );
   useEffect(() => {
     const fetchCurrentUser = async () => {
+      if (!token) return toast.error("Invalid Token");
       try {
         const response = await getCurrentUser();
-        const token = localStorage.getItem("token");
         dispatch(
           setCredentials({
             user: response?.user,
@@ -61,13 +64,9 @@ function App() {
         });
       }
     };
-    if (localStorage.getItem("token")) {
-      fetchCurrentUser();
-    }
-  }, []);
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated,
-  );
+    fetchCurrentUser();
+  }, [token]);
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -80,6 +79,7 @@ function App() {
             Welcome {<b className="capitalize">{currentUser?.name}</b>}
           </span>
           <Link to="/">Home</Link>
+          <Link to="/todos">Todo</Link>
           <button
             onClick={handleLogout}
             className="bg-red-500 text-white px-4 py-1 rounded"
@@ -94,6 +94,14 @@ function App() {
           element={
             <ProtectedRoutes>
               <HomePage />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/todos"
+          element={
+            <ProtectedRoutes>
+              <TodoPage />
             </ProtectedRoutes>
           }
         />
